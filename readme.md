@@ -1,4 +1,4 @@
-## vivu-npm
+## ass-lyric
 [![License](https://img.shields.io/github/license/logustra/vivu-npm)](https://github.com/logustra/vivu-npm/blob/master/license.md)
 [![Code Style](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 [![Commitizen](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli)
