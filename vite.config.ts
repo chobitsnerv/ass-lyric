@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
     build = {
       lib: {
         entry: resolve(__dirname, 'src/index.ts'),
-        name: 'vivu-npm',
+        name: 'ass-lyric',
         fileName: 'index',
         formats: ['es', 'cjs', 'umd'],
       },
@@ -22,10 +22,7 @@ export default defineConfig(({ mode }) => {
          * make sure to externalize deps that shouldn't be bundled
          * into your library
          */
-        external: [
-          'vue',
-          'vue-demi',
-        ],
+        external: ['vue', 'vue-demi'],
         output: {
           /**
            * DESC:
@@ -62,17 +59,10 @@ export default defineConfig(({ mode }) => {
       include: ['test/**/*.test.ts'],
       environment: 'happy-dom',
       deps: {
-        inline: [
-          '@vue',
-          'vue-demi',
-        ],
+        inline: ['@vue', 'vue-demi'],
       },
       coverage: {
-        reporter: [
-          'text',
-          'text-summary',
-          'lcov',
-        ],
+        reporter: ['text', 'text-summary', 'lcov'],
       },
     }
   }

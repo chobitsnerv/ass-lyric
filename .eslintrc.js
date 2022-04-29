@@ -1,12 +1,10 @@
 module.exports = {
-  'extends': [
-    '@antfu'
-  ],
+  extends: ["@antfu"],
   ignorePatterns: [
-    'node_modules/',
-    'dist/',
-    'coverage/',
-    'pnpm-lock.yaml',
-    '*.js'
-  ]
-}
+    "node_modules/",
+    "dist/",
+    "coverage/",
+    "pnpm-lock.yaml",
+    "*.js",
+  ],
+};
