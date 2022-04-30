@@ -1,5 +1,5 @@
 <script lang="ts">
-import { computed, defineComponent, nextTick, ref, watch } from 'vue'
+import { computed, defineComponent, nextTick, onBeforeUpdate, ref, watch } from 'vue'
 
 export default defineComponent({
   name: 'ASSLyric',
@@ -97,7 +97,7 @@ const lyricView = ref<null | HTMLElement>(null)
 // 获取歌词wrapper容器div
 const lyricWrapper = ref<null | HTMLElement>(null)
 // 获取歌词行容器div
-const lyricLine = ref<null | HTMLElement[]>(null)
+const lyricLine = ref<HTMLElement[]>([])
 
 const firstLyricHeight = ref(0)
 const lastLyricHeight = ref(0)
@@ -154,7 +154,16 @@ const parsedLyric = computed(() => {
     // sort by time
     lrc = lrc.filter(item => item[1])
     lrc.sort((a: any, b: any) => a[0] - b[0])
-    return lrc
+    const _lrc = []
+    for (let i = 0; i < lrc.length - 1; i++) {
+      _lrc.push(lrc[i])
+      if (lrc[i][0] === lrc[i + 1][0]) {
+        _lrc[_lrc.length - 1][2] = lrc[i + 1][1]
+        i++
+      }
+    }
+    if (lrc[lrc.length - 1][0] !== _lrc[_lrc.length - 1][0])_lrc.push(lrc[lrc.length - 1])
+    return _lrc
   }
   else {
     return []
@@ -221,7 +230,7 @@ watch(
 )
 
 watch(
-  () => parsedLyric,
+  parsedLyric,
   () => {
     nextTick(() => {
       // 获取第1句 和最后 1句歌词高度
@@ -343,6 +352,10 @@ const findCenterLyricIdx = () => {
   }
   return -1
 }
+
+onBeforeUpdate(() => {
+  lyricLine.value = []
+})
 </script>
 
 // 歌词滚动组件
@@ -365,7 +378,7 @@ const findCenterLyricIdx = () => {
     >
       <div
         v-for="(item, index) in parsedLyric"
-        ref="lyricLine"
+        :ref="el=>{lyricLine[index]=el}"
         :key="index"
         :style="{ padding: `${unitDivide(lyricMargin, 2)} 0` }"
         :class="{
@@ -373,10 +386,10 @@ const findCenterLyricIdx = () => {
           [lyricActiveClass]: index === activeLyricIdx,
         }"
       >
-        <p :style="{ lineHeight: lyricLineheight }">
+        <p :style="{lineHeight: lyricLineheight}">
           {{ item[1] }}
         </p>
-        <p v-if="item[2]" :style="{ lineHeight: lyricLineheight }">
+        <p v-if="item[2]" :style="{lineHeight: lyricLineheight}">
           {{ item[2] }}
         </p>
       </div>
