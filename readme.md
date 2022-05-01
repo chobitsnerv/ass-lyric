@@ -102,4 +102,4 @@ If you like my works, you can cheer me on here 😆
 &nbsp; &nbsp; 🌍 [Ko-Fi](https://ko-fi.com/logustra)<br>
 
 ## License
-MIT License © 2021 Faizal Andyka
+MIT License © 2021 CC

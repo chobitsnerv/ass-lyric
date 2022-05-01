@@ -162,7 +162,8 @@ const parsedLyric = computed(() => {
         i++
       }
     }
-    if (lrc[lrc.length - 1][0] !== _lrc[_lrc.length - 1][0])_lrc.push(lrc[lrc.length - 1])
+    if (lrc[lrc.length - 1][0] !== _lrc[_lrc.length - 1][0])
+      _lrc.push(lrc[lrc.length - 1])
     return _lrc
   }
   else {
@@ -257,9 +258,11 @@ const timeToStr = (num: number) => {
   num = Math.round(num)
   let second: any = num % 60
   let minute: any = Math.floor(num / 60)
-  if (second < 10) second = `0${second}`
+  if (second < 10)
+    second = `0${second}`
 
-  if (minute < 10) minute = `0${minute}`
+  if (minute < 10)
+    minute = `0${minute}`
 
   return `${minute}:${second}`
 }

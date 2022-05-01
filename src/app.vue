@@ -39,7 +39,8 @@ const changeCurrentTime = (newTime: number) => {
   currentTime.value = newTime
 }
 const handleChangeCurrentTime = (time: number) => {
-  if (audio.value) audio.value.currentTime = time
+  if (audio.value)
+    audio.value.currentTime = time
 }
 
 const readFile = (filePath: string) => {
