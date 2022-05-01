@@ -81,7 +81,8 @@
     "vue-tsc": "^0.29.8"
   },
   "husky": {
-  "hooks": {
-    "prepare-commit-msg": "exec < /dev/tty && npx cz --hook || true"
+    "hooks": {
+      "prepare-commit-msg": "exec < /dev/tty && npx cz --hook || true"
+    }
   }
 }
