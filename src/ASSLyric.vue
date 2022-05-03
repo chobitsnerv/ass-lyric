@@ -1,4 +1,6 @@
 <script lang="ts">
+import { Console } from 'console'
+import type { HtmlHTMLAttributes } from 'vue'
 import { computed, defineComponent, nextTick, onBeforeUpdate, ref, watch } from 'vue'
 
 export default defineComponent({
@@ -102,6 +104,12 @@ const lyricLine = ref<HTMLElement[]>([])
 const firstLyricHeight = ref(0)
 const lastLyricHeight = ref(0)
 
+// 卡拉ok字幕用计时器
+// 启动单个字推进的定时器
+const karaokeTimer = ref()
+// 默认刷新时长30ms，刷新时长配置对桌面歌词性能影响较大
+const step = 10
+
 // 包含原词和译词（译词在同一个文件）
 /**
  * Parse lrc, suppose multiple time tag
@@ -122,33 +130,28 @@ const parsedLyric = computed(() => {
       (p1: string) => `${p1}\n[`,
     )
     const lyric = _lyricObject.split('\n')
+    const lrcInfo = new Map()
     let lrc = []
     const lyricLen = lyric.length
     for (let i = 0; i < lyricLen; i++) {
-      // match lrc time
+      // try match lrc time
       const lrcTimes = lyric[i].match(/\[(\d{2}):(\d{2})(\.(\d{2,3}))?]/g)
-      // match lrc text
-      const lrcText = lyric[i]
-        .replace(/.*\[(\d{2}):(\d{2})(\.(\d{2,3}))?]/g, '')
-        .replace(/<(\d{2}):(\d{2})(\.(\d{2,3}))?>/g, '')
-        .replace(/^\s+|\s+$/g, '')
-
+      // try match lrv info tags
+      const lrcInfoTags = lyric[i].match(/^\[\s*(\w+)\s*:(.*)]/g)
       if (lrcTimes) {
         // handle multiple time tag
         const timeLen = lrcTimes.length
         for (let j = 0; j < timeLen; j++) {
-          const oneTime = /\[(\d{2}):(\d{2})(\.(\d{2,3}))?]/.exec(lrcTimes[j])
-          if (oneTime) {
-            const min2sec = parseInt(oneTime[1]) * 60
-            const sec2sec = parseInt(oneTime[2])
-            const msec2sec = oneTime[4]
-              ? parseInt(oneTime[4])
-                / (`${oneTime[4]}`.length === 2 ? 100 : 1000)
-              : 0
-            const lrcTime = min2sec + sec2sec + msec2sec
-            lrc.push([lrcTime, lrcText])
-          }
+          const lrcTime = strToTime(lrcTimes[j])
+          // match lrc text
+          const lrcText = convertLrcText(lyric[i], strToTime(lrcTimes[j], true))
+          lrc.push([lrcTime + lrcInfo.get('offset') / -1000, lrcText])
         }
+      }
+      else if (lrcInfoTags) {
+        const paras = /^\[\s*(\w+)\s*:(.*)]/g.exec(lrcInfoTags[0])
+        if (paras)
+          lrcInfo.set(paras[1].trim(), paras[2].trim())
       }
     }
     // sort by time
@@ -246,11 +249,43 @@ watch(
   },
 )
 
+// 根据当前行调用karaoke
+watch(
+  activeLyricIdx,
+  (newValue: number) => {
+    processKaraLine(lyricLine.value[newValue].getElementsByTagName('span'))
+  },
+)
+
 // 带单位的字符串除以数字，如60px/2=15px
 const unitDivide = (unitNum: string, num: number) => {
   const num1 = parseFloat(unitNum)
   const unit = unitNum.replace(num1.toString(), '')
   return `${num1 / num}${unit}`
+}
+
+// 把mm:ss.xx或者mm:ss.xxx转换为秒数的形式
+// 默认返回s，msFlag控制按照ms输出
+const strToTime = (str: string, msFlag = false) => {
+  const oneTime = /\[?(\d{2}):(\d{2})(\.(\d{2,3}))?]?/.exec(str)
+  if (oneTime) {
+    const min2sec = parseInt(oneTime[1]) * 60
+    const sec2sec = parseInt(oneTime[2])
+    if (!msFlag) {
+      const msec2sec = oneTime[4]
+        ? parseInt(oneTime[4])
+                / (`${oneTime[4]}`.length === 2 ? 100 : 1000)
+        : 0
+      return min2sec + sec2sec + msec2sec
+    }
+    else {
+      const msec2sec = oneTime[4]
+        ? parseInt(oneTime[4])
+        : 0
+      return (min2sec + sec2sec) * 1000 + msec2sec
+    }
+  }
+  else { return -1 }
 }
 
 // 把秒数转换为xx:xx的形式
@@ -265,6 +300,34 @@ const timeToStr = (num: number) => {
     minute = `0${minute}`
 
   return `${minute}:${second}`
+}
+
+// 转换<>
+const convertLrcText = (lrcStr: string, baseTime: number) => {
+  let resultStr = ''
+  const _textWithTag = lrcStr.replace(/.*\[(\d{2}):(\d{2})(\.(\d{2,3}))?]/g, '')
+    .replace(/^\s+|\s+$/g, '')
+
+  if (_textWithTag.search(/<(\d{2}):(\d{2})(\.(\d{2,3}))?>/g) !== -1) {
+    const _lrcArr: string[] = _textWithTag.split(/<|>/)
+    let _tempHTML = ''
+    let _startTimePoint = -1
+    for (const el of _lrcArr) {
+      if (el.match(/(\d{2}):(\d{2})(\.(\d{2,3}))?/g)) {
+        if (_startTimePoint !== -1) {
+          _tempHTML = _tempHTML.replace('$2', (strToTime(el, true) - _startTimePoint).toString())
+          resultStr += _tempHTML
+        }
+        _tempHTML = '<span data-offset="$1" data-duration="$2">$3</span>'
+        _startTimePoint = strToTime(el, true)
+        _tempHTML = _tempHTML.replace('$1', (_startTimePoint - baseTime).toString())
+      }
+      else { _tempHTML = _tempHTML.replace('$3', el) }
+    }
+  }
+  else { resultStr = _textWithTag }
+
+  return resultStr
 }
 
 // 设置第1句和最后1句歌词高度
@@ -356,6 +419,43 @@ const findCenterLyricIdx = () => {
   return -1
 }
 
+/*
+处理单个显示元素
+_eps: dom节点列表，表示歌词中单个显示元素
+_index: 当前变化元素的索引
+_ps: process step，每次timeout推进的步长
+_process: 当前变化元素的进度（0-100）
+pos: 对该元素进行处理时间点，在哪个timeout点处理
+count: timeout的次数
+*/
+const processKaraWord = (_eps: HTMLCollectionOf<HTMLSpanElement>, _index: number, _ps: number, _process: number, pos: number, count: number) => {
+  const _ep = _eps[_index]
+  if (count >= pos) {
+    _process += _ps
+    _ep.style.backgroundImage = `-webkit-linear-gradient(top, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%), -webkit-linear-gradient(left, #f00 ${_process}%, #00f 0%)`
+    if (_process >= 99) {
+      if ((_index + 1) >= _eps.length) { // 该句结束退出
+        return
+      }
+      _index++
+      const ts = Math.round(Number(_eps[_index].getAttribute('data-duration')) / step) === 0 ? 1 : Math.round(Number(_eps[_index].getAttribute('data-duration')) / step)
+      _ps = 100 / ts
+      _process = 0
+      pos = Math.round(Number(_eps[_index].getAttribute('data-offset')) / step)
+    }
+  }
+  count++
+  karaokeTimer.value = setTimeout(() => processKaraWord(_eps, _index, _ps, _process, pos, count), step)
+}
+
+/*
+处理单行
+*/
+const processKaraLine = (line: HTMLCollectionOf<HTMLSpanElement>) => {
+  if (line)
+    processKaraWord(line, 0, 100 / Math.round(Number(line[0].getAttribute('data-duration')) / step), 0, Math.round(Number(line[0].getAttribute('data-offset')) / step), 0)
+}
+
 onBeforeUpdate(() => {
   lyricLine.value = []
 })
@@ -389,12 +489,8 @@ onBeforeUpdate(() => {
           [lyricActiveClass]: index === activeLyricIdx,
         }"
       >
-        <p :style="{lineHeight: lyricLineheight}">
-          {{ item[1] }}
-        </p>
-        <p v-if="item[2]" :style="{lineHeight: lyricLineheight}">
-          {{ item[2] }}
-        </p>
+        <p :style="{lineHeight: lyricLineheight}" class="karaok" v-html="item[1]" />
+        <p v-if="item[2]" :style="{lineHeight: lyricLineheight}" class="karaok" v-html="item[2]" />
       </div>
     </div>
 
@@ -457,4 +553,21 @@ onBeforeUpdate(() => {
     margin: 0;
   }
 }
+
+.karaok {
+  -webkit-box-orient:horizontal;
+  -webkit-box-align:center;
+  -webkit-filter:brightness(2);
+  filter: brightness(2);
+
+  // 所有span添加卡拉OK用css
+  ::v-deep & > span {
+    background:-webkit-linear-gradient(top, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%), -webkit-linear-gradient(left, #f00 0%, #00f 0%);
+    -webkit-background-clip:text;
+    background-clip: text;
+    -webkit-text-fill-color:transparent;
+    /*-webkit-text-stroke:1px #f00;*/
+    //-webkit-filter:drop-shadow(0px 0px 1px #f00);
+}
+ }
 </style>
