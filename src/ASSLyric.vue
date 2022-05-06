@@ -14,6 +14,10 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  isPasued: {
+    type: Boolean,
+    required: true,
+  },
   // 原词，格式为{开始时间: 歌词, ...}
   lyric: {
     type: String,
@@ -107,8 +111,9 @@ const lastLyricHeight = ref(0)
 // 卡拉ok字幕用计时器
 // 启动单个字推进的定时器
 const karaokeTimer = ref()
+const karaokeStatus = ref()
 // 默认刷新时长30ms，刷新时长配置对桌面歌词性能影响较大
-const step = 10
+const step = 25
 
 // 包含原词和译词（译词在同一个文件）
 /**
@@ -230,6 +235,14 @@ watch(
   () => props.currentTime,
   () => {
     updateLyricPos()
+  },
+)
+
+watch(
+  () => props.isPasued,
+  () => {
+    if (karaokeStatus.value)
+      karaokeTimer.value = setTimeout(() => processKaraWord(karaokeStatus.value.eps, karaokeStatus.value.index, karaokeStatus.value.ps, karaokeStatus.value.process, karaokeStatus.value.pos, karaokeStatus.value.count), step)
   },
 )
 
@@ -429,12 +442,18 @@ pos: 对该元素进行处理时间点，在哪个timeout点处理
 count: timeout的次数
 */
 const processKaraWord = (_eps: HTMLCollectionOf<HTMLSpanElement>, _index: number, _ps: number, _process: number, pos: number, count: number) => {
+  if (props.isPasued) {
+    karaokeStatus.value = { eps: _eps, index: _index, ps: _ps, process: _process, pos, count }
+    clearTimeout(karaokeTimer.value)
+    return
+  }
   const _ep = _eps[_index]
   if (count >= pos) {
     _process += _ps
     _ep.style.backgroundImage = `-webkit-linear-gradient(top, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%), -webkit-linear-gradient(left, #f00 ${_process}%, #00f 0%)`
     if (_process >= 99) {
       if ((_index + 1) >= _eps.length) { // 该句结束退出
+        karaokeStatus.value = null
         return
       }
       _index++

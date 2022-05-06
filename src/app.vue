@@ -23,6 +23,9 @@ const currentTime = ref(0)
 
 const audio = ref<HTMLVideoElement | null>(null)
 
+// 是否暂停
+const isPaused = ref(false)
+
 // 将00:00.00转换为秒数
 const timeStrToNum = (str: string) => {
   const minute = Number(str.slice(0, 2))
@@ -70,12 +73,15 @@ onMounted(() => {
         :src="musicSrc"
         :loop="true"
         @timeupdate="timeupdate"
+        @pause="isPaused=true"
+        @play="isPaused=false"
       />
     </div>
 
     <div class="lyric">
       <ASSLyric
         :lyric="lyricFile"
+        :is-pasued="isPaused"
         :lyric-active-class="'lyric-active'"
         :lyric-center-class="'lyric-center'"
         triangle-width="14px"
