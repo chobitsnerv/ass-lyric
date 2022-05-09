@@ -32,6 +32,16 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  // 拖拽时中间歌词类名
+  karaokeBasicColor: {
+    type: String,
+    default: '#00f',
+  },
+  // 拖拽时中间歌词类名
+  karaokeChangedColor: {
+    type: String,
+    default: '#f00',
+  },
   // 滚动到目标歌词时间，单位ms
   lyricScrollTime: {
     type: Number,
@@ -72,6 +82,11 @@ const props = defineProps({
     type: String,
     default: 'orange',
   },
+  // 是否允许根据歌词支持情况开启卡拉ok模式
+  karaokeAutoMode: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const emit = defineEmits(['change-current-time'])
@@ -111,9 +126,12 @@ const lastLyricHeight = ref(0)
 // 卡拉ok字幕用计时器
 // 启动单个字推进的定时器
 const karaokeTimer = ref()
+// 暂停时记录卡拉OK歌词渲染进度
 const karaokeStatus = ref()
 // 默认刷新时长30ms，刷新时长配置对桌面歌词性能影响较大
-const step = 25
+const step = 30
+// 卡拉ok显示支持flag，仅当支持的时候才启用卡拉ok
+const karaokeAvailable = ref(false)
 
 // 包含原词和译词（译词在同一个文件）
 /**
@@ -266,7 +284,8 @@ watch(
 watch(
   activeLyricIdx,
   (newValue: number) => {
-    processKaraLine(lyricLine.value[newValue].getElementsByTagName('span'))
+    if (karaokeAvailable.value)
+      processKaraLine(lyricLine.value[newValue].getElementsByTagName('span'))
   },
 )
 
@@ -337,6 +356,8 @@ const convertLrcText = (lrcStr: string, baseTime: number) => {
       }
       else { _tempHTML = _tempHTML.replace('$3', el) }
     }
+    if (resultStr.length > 0)
+      karaokeAvailable.value = true && props.karaokeAutoMode
   }
   else { resultStr = _textWithTag }
 
@@ -450,7 +471,7 @@ const processKaraWord = (_eps: HTMLCollectionOf<HTMLSpanElement>, _index: number
   const _ep = _eps[_index]
   if (count >= pos) {
     _process += _ps
-    _ep.style.backgroundImage = `-webkit-linear-gradient(top, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%), -webkit-linear-gradient(left, #f00 ${_process}%, #00f 0%)`
+    _ep.style.backgroundImage = `-webkit-linear-gradient(top, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%), -webkit-linear-gradient(left, ${props.karaokeChangedColor} ${_process}%, ${props.karaokeBasicColor} 0%)`
     if (_process >= 99) {
       if ((_index + 1) >= _eps.length) { // 该句结束退出
         karaokeStatus.value = null
@@ -508,7 +529,7 @@ onBeforeUpdate(() => {
           [lyricActiveClass]: index === activeLyricIdx,
         }"
       >
-        <p :style="{lineHeight: lyricLineheight}" class="karaok" v-html="item[1]" />
+        <p :style="{lineHeight: lyricLineheight}" :class="{karaok: karaokeAvailable}" v-html="item[1]" />
         <p v-if="item[2]" :style="{lineHeight: lyricLineheight}" class="karaok" v-html="item[2]" />
       </div>
     </div>
@@ -581,12 +602,13 @@ onBeforeUpdate(() => {
 
   // 所有span添加卡拉OK用css
   ::v-deep & > span {
-    background:-webkit-linear-gradient(top, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%), -webkit-linear-gradient(left, #f00 0%, #00f 0%);
+    background:-webkit-linear-gradient(top, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%), -webkit-linear-gradient(left, v-bind(karaokeChangedColor) 0%, v-bind(karaokeBasicColor) 0%);
     -webkit-background-clip:text;
     background-clip: text;
     -webkit-text-fill-color:transparent;
     /*-webkit-text-stroke:1px #f00;*/
-    //-webkit-filter:drop-shadow(0px 0px 1px #f00);
+    -webkit-filter:drop-shadow(0px 0px 1px #f00);
+    filter: drop-shadow(0px 0px 1px #f00);
 }
  }
 </style>

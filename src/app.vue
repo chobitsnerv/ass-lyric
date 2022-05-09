@@ -15,7 +15,7 @@ export default defineComponent({
 </script>
 
 <script setup lang="ts">
-const musicSrc = ref('../public/samples/2022.04.02 A 水母之歌【9.0】.mp3')
+const musicSrc = ref('../public/samples/2021.09.09 D 我在人民广场吃炸鸡.m4a')
 // 歌词
 const lyricFile = ref('')
 // 当前播放时间
@@ -59,7 +59,7 @@ const readFile = (filePath: string) => {
 
 onMounted(() => {
   lyricFile.value
-    = readFile('../public/samples/2022.04.02 A 水母之歌【9.0】.lrc') || ''
+    = readFile('../public/samples/2021.09.09 D 我在人民广场吃炸鸡.lrc') || ''
 })
 </script>
 
@@ -126,6 +126,7 @@ body {
   border: 1px dashed #ccc;
   box-sizing: border-box;
   text-align: center;
+  font:normal normal bold 2rem 微软雅黑,sans-serif;
 }
 .lyric-active {
   // 需要最高级，否则可能被内部的.center-lyric覆盖
