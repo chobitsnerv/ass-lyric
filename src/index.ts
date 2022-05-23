@@ -1,3 +1,3 @@
-import HelloWorld from './helloWorld.vue'
-export default HelloWorld
-export * from './helloWorld.vue'
+import ASSLyric from './ASSLyric.vue'
+export default ASSLyric
+export * from './ASSLyric.vue'

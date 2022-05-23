@@ -524,7 +524,7 @@ onBeforeUpdate(() => {
     >
       <div
         v-for="(item, index) in parsedLyric"
-        :ref="el=>{if(el!= null) lyricLine[index]=el}"
+        :ref="el=>{if(el!= null) lyricLine[index]=el as HTMLElement}"
         :key="index"
         :style="{ padding: `${unitDivide(lyricMargin, 2)} 0` }"
         :class="{
