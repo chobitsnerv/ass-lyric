@@ -168,7 +168,7 @@ const parsedLyric = computed(() => {
           const lrcTime = strToTime(lrcTimes[j])
           // match lrc text
           const lrcText = convertLrcText(lyric[i], strToTime(lrcTimes[j], true))
-          lrc.push([lrcTime + lrcInfo.get('offset') / -1000, lrcText])
+          lrc.push([lrcTime + (lrcInfo.get('offset') / -1000 || 0), lrcText])
         }
       }
       else if (lrcInfoTags) {
@@ -245,6 +245,7 @@ const minTranslateY = computed(() => {
 watch(
   () => props.lyric,
   (newValue: string) => {
+    karaokeAvailable.value = false
     lyricObject.value = newValue
   },
 )
@@ -321,7 +322,9 @@ const strToTime = (str: string, msFlag = false) => {
 }
 
 // 把秒数转换为xx:xx的形式
-const timeToStr = (num: number) => {
+const timeToStr = (num: number | string) => {
+  if (typeof num === 'string')
+    num = Number(num)
   num = Math.round(num)
   let second: any = num % 60
   let minute: any = Math.floor(num / 60)
@@ -338,7 +341,7 @@ const timeToStr = (num: number) => {
 const convertLrcText = (lrcStr: string, baseTime: number) => {
   let resultStr = ''
   const _textWithTag = lrcStr.replace(/.*\[(\d{2}):(\d{2})(\.(\d{2,3}))?]/g, '')
-    .replace(/^\s+|\s+$/g, '')
+    .replace(/^\s+|\s+$/g, '').replace(/\[$/g, '')
 
   if (_textWithTag.search(/<(\d{2}):(\d{2})(\.(\d{2,3}))?>/g) !== -1) {
     const _lrcArr: string[] = _textWithTag.split(/<|>/)
@@ -521,7 +524,7 @@ onBeforeUpdate(() => {
     >
       <div
         v-for="(item, index) in parsedLyric"
-        :ref="el=>{lyricLine[index]=el}"
+        :ref="el=>{if(el!= null) lyricLine[index]=el}"
         :key="index"
         :style="{ padding: `${unitDivide(lyricMargin, 2)} 0` }"
         :class="{
@@ -530,7 +533,7 @@ onBeforeUpdate(() => {
         }"
       >
         <p :style="{lineHeight: lyricLineheight}" :class="{karaok: karaokeAvailable}" v-html="item[1]" />
-        <p v-if="item[2]" :style="{lineHeight: lyricLineheight}" class="karaok" v-html="item[2]" />
+        <p v-if="item[2]" :style="{lineHeight: lyricLineheight}" :class="{karaok: karaokeAvailable}" v-html="item[2]" />
       </div>
     </div>
 
