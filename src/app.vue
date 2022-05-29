@@ -17,7 +17,7 @@ export default defineComponent({
 <script setup lang="ts">
 const songList = ref<string[]>([])
 
-const musicSrc = ref('../public/samples/2021.09.09 D 我在人民广场吃炸鸡.m4a')
+const musicSrc = ref(`${import.meta.env.BASE_URL}/samples/2021.09.09 D 我在人民广场吃炸鸡.m4a`)
 // 歌词
 const lyricFile = ref('')
 // 当前播放时间
@@ -70,14 +70,14 @@ const readFile = (filePath: string) => {
 }
 
 const changeAudio = (audioName: string, index: number) => {
-  musicSrc.value = `../public/samples/${audioName}.m4a`
-  lyricFile.value = readFile(`../public/samples/${audioName}.lrc`) || ''
+  musicSrc.value = `${import.meta.env.BASE_URL}/samples/${audioName}.m4a`
+  lyricFile.value = readFile(`${import.meta.env.BASE_URL}/samples/${audioName}.lrc`) || ''
   selectedIndex.value = index
 }
 
 onMounted(() => {
   lyricFile.value
-    = readFile('../public/samples/2021.09.09 D 我在人民广场吃炸鸡.lrc') || ''
+    = readFile(`${import.meta.env.BASE_URL}/samples/2021.09.09 D 我在人民广场吃炸鸡.lrc`) || ''
   const modulesFiles = import.meta.globEager('../public/samples/*.lrc', { as: 'raw' })
 
   for (const path in modulesFiles)
@@ -102,7 +102,7 @@ onMounted(() => {
         @play="isPaused=false"
       />
       <div class="slider-title">
-        Font Size:<el-slider v-model="fontsize" min="0.5" max="2.5" step="0.1" show-input input-size="small" />
+        Font Size:<el-slider v-model="fontsize" :min="0.5" :max="2.5" :step="0.1" show-input input-size="small" />
       </div>
       <el-scrollbar height="400px">
         <p

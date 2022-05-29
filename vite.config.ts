@@ -13,30 +13,8 @@ export default defineConfig(({ mode }) => {
   let build = {}
   if (isProd) {
     build = {
-      lib: {
-        entry: resolve(__dirname, 'src/index.ts'),
-        name: 'ass-lyric',
-        fileName: 'index',
-        formats: ['es', 'cjs', 'umd'],
-      },
       rollupOptions: {
-        /**
-         * DESC:
-         * make sure to externalize deps that shouldn't be bundled
-         * into your library
-         */
-        external: ['vue', 'vue-demi'],
-        output: {
-          /**
-           * DESC:
-           * Provide global variables to use in the UMD build
-           * for externalized deps
-           */
-          globals: {
-            'vue': 'Vue',
-            'vue-demi': 'VueDemi',
-          },
-        },
+
       },
     }
   }
