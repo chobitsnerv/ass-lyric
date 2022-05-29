@@ -5,6 +5,9 @@
 
 > Starter template to build component library for vue.js 2-3
 
+
+> [Demo](https://chobitsnerv.github.io/ass-lyric/)
+
 ## Features
 - Faster by default: [vite](https://github.com/vitejs/vite), [vue](https://github.com/vuejs/vue-next), [pnpm](https://github.com/pnpm/pnpm), [esbuild](https://github.com/evanw/esbuild)
 - Typescript, of course
