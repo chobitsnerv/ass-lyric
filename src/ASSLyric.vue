@@ -1,5 +1,4 @@
 <script lang="ts">
-import { Console } from 'console'
 import type { HtmlHTMLAttributes } from 'vue'
 import { computed, defineComponent, nextTick, onBeforeUpdate, ref, watch } from 'vue'
 

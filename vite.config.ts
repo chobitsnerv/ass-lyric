@@ -71,7 +71,6 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
-    base: '/repo-name/',
     plugins: [
       vue(),
       AutoImport({
