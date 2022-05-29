@@ -49,7 +49,7 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
-    base: '/repo-name/',
+    base: '/ass-lyric/',
     plugins: [
       vue(),
       AutoImport({
