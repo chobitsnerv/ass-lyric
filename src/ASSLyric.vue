@@ -188,7 +188,7 @@ const parsedLyric = computed(() => {
         i++
       }
     }
-    if (lrc[lrc.length - 1][0] !== _lrc[_lrc.length - 1][0])
+    if (lrc.length !== 0 && lrc[lrc.length - 1][0] !== _lrc[_lrc.length - 1][0])
       _lrc.push(lrc[lrc.length - 1])
     return _lrc
   }
@@ -371,8 +371,8 @@ const convertLrcText = (lrcStr: string, baseTime: number) => {
 const setFirstLastLyricHeight = () => {
   const lyricLines = lyricLine.value
   if (lyricLines) {
-    firstLyricHeight.value = lyricLines[0].offsetHeight
-    lastLyricHeight.value = lyricLines[lyricLines.length - 1].offsetHeight
+    firstLyricHeight.value = lyricLines[0]?.offsetHeight
+    lastLyricHeight.value = lyricLines[lyricLines.length - 1]?.offsetHeight
   }
 }
 
